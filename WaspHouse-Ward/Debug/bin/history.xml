@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="arm-none-eabi-gcc -mcpu=cortex-m4 -mthumb -g -nostartfiles -Map=WaspHouse-Ward.map -O0 --gc-sections -LC:\CooCox\CoIDE\configuration\ProgramData\WaspHouse-Ward -TC:\CooCox\CoIDE\configuration\ProgramData\WaspHouse-Ward/arm-gcc-link.ld -g">
+      <target file="WaspHouse-Ward.elf" lastModified="15b139fcc25">
+         <source file="..\obj\startup_stm32f4xx.o" lastModified="15b139fc69c"/>
+         <source file="..\obj\main.o" lastModified="15b139fc6f0"/>
+         <source file="..\obj\stm32f4xx_rcc.o" lastModified="15b139fc7b8"/>
+         <source file="..\obj\stm32f4xx_gpio.o" lastModified="15b139fc82c"/>
+         <source file="..\obj\system_stm32f4xx.o" lastModified="15b139fc8a0"/>
+      </target>
+   </processor>
+</history>
