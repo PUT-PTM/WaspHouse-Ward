@@ -1,0 +1,20 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<history>
+   <processor signature="arm-none-eabi-gcc 3.4.2 mingw32 -mcpu=cortex-m4 -mthumb -Wall -ffunction-sections -g -O0 -c -DSTM32F407VG -DSTM32F4XX -DUSE_STDPERIPH_DRIVER -D__ASSEMBLY__ -I..\..\..\workspace\WaspHouse-Ward\cmsis_lib -I..\..\..\workspace\WaspHouse-Ward\cmsis_boot -I..\..\..\workspace -I..\..\..\workspace\WaspHouse-Ward -I..\..\..\workspace\WaspHouse-Ward\cmsis -I..\..\..\workspace\WaspHouse-Ward\cmsis_lib\include">
+      <target file="stm32f4xx_rcc.o" lastModified="15b139fc7b8">
+         <source file="..\..\..\cmsis_lib\source\stm32f4xx_rcc.c" lastModified="15af66cec75"/>
+      </target>
+      <target file="system_stm32f4xx.o" lastModified="15b139fc8a0">
+         <source file="..\..\..\cmsis_boot\system_stm32f4xx.c" lastModified="15af66cec5c"/>
+      </target>
+      <target file="stm32f4xx_gpio.o" lastModified="15b139fc82c">
+         <source file="..\..\..\cmsis_lib\source\stm32f4xx_gpio.c" lastModified="15af66cec2f"/>
+      </target>
+      <target file="main.o" lastModified="15b139fc6f0">
+         <source file="..\..\..\main.c" lastModified="15b139fba7e"/>
+      </target>
+      <target file="startup_stm32f4xx.o" lastModified="15b139fc69c">
+         <source file="..\..\..\cmsis_boot\startup\startup_stm32f4xx.c" lastModified="15af66cec4e"/>
+      </target>
+   </processor>
+</history>
