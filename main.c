@@ -1,7 +1,3 @@
-// TODO: HOW WORK 'AT+CIPSEND' ON STM + USE PROGRAM IN ECLIPSE
-// TODO: POWER ON FAN WHEN TEMPERATURE IS OVER 20 DEEGRES => IRQ (???)
-// TODO: why tips does not work;  learn about code (SYS TICK, WHY DELAYS, DH11.C and .H); send all to git
-
 /* SENSOR...
 PATTERN: https://github.com/sapher/stm32-dht11_driver
 
@@ -15,17 +11,17 @@ MIDDLE -> PB6
 
 /* WIFI...
 WIFI ->
-PINY:
+PINS:
 https://cdn.instructables.com/FR0/YPQQ/IJX7FOP5/FR0YPQQIJX7FOP5.LARGE.jpg
 
-POD£¥CZENIE:
+CONNECT:
 GND->GND
 PC11->Tx
 PC10->Rx
 3V->VCC
 3V->CH_PD
 
-KOMENDY:
+COMMANDS:
 http://www.pridopia.co.uk/pi-doc/ESP8266ATCommandsSet.pdf
 https://www.espressif.com/sites/default/files/documentation/4a-esp8266_at_instruction_set_en.pdf
 https://www.itead.cc/wiki/ESP8266_Serial_WIFI_Module
@@ -33,7 +29,7 @@ http://www.sunduino.pl/wordpress/esp8266-czesc-2-komendy-at/
 https://room-15.github.io/blog/2015/03/26/esp8266-at-command-reference/
 
 
-KOMUNIKACJA P£YTKA - MODU£ USB - HERKULES:
+COMMUNICATION BOARD - USB MODULE - HERKULES:
 PA0->TxD
 PA1->RxD
 GND->GND
@@ -60,6 +56,7 @@ struct DHT11_Dev dev;
 volatile uint32_t msTicks;
 
 void GPIOInit(void);
+void relayInit(void);
 void SENSORInit(void);
 void SysTick_Handler(void);
 void Delay (uint32_t dlyTicks);
@@ -76,10 +73,26 @@ int main(void)
 	GPIOInit();
 	USART3Init();
 	SENSORInit();
+	relayInit();
 	connect();
 	void USART3_IRQHandler(void);
 	while(1) {
 	}
+}
+
+void relayInit(void){
+	RCC_AHB1PeriphClockCmd(RCC_AHB1Periph_GPIOA, ENABLE);
+
+	GPIO_InitTypeDef GPIO_InitStructure;
+	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_7;
+	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_OUT;
+	GPIO_InitStructure.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStructure.GPIO_PuPd = GPIO_PuPd_UP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
+
+	GPIO_Init(GPIOA, &GPIO_InitStructure);
+
+	GPIO_SetBits(GPIOA, GPIO_Pin_7);
 }
 
 // INIT FOR SENSOR + TIMER - EVERY 5 SECONDS SEND DATA
@@ -164,6 +177,12 @@ void TIM3_IRQHandler(void)
              				    */
          					}
          					else{
+         						if(humidity>20){
+         							GPIO_ResetBits(GPIOA, GPIO_Pin_7);
+         						}
+         						else{
+         							GPIO_SetBits(GPIOA, GPIO_Pin_7);
+         						}
              					/* USART_Send("AT+CIPSEND=3\r\n");
              					   Delay_us(5000000);
              					   USART_Send("H");
@@ -264,7 +283,7 @@ void connect(void)
 {
 	Delay_us(5000000);
 	USART_Send("AT+RST\r\n");
-	GPIO_SetBits(GPIOD, GPIO_Pin_1);
+	GPIO_SetBits(GPIOD, GPIO_Pin_12);
 	Delay_us(5000000);
 	USART_Send("AT+CWMODE=1\r\n");
 	Delay_us(5000000);
@@ -292,4 +311,3 @@ void USART_Send(volatile char *c)
 		Delay_us(500);
 		*c++;
 	}
-}
