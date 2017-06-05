@@ -23,6 +23,7 @@ void getTemparatureAndHumidity(int *temp, int *humi);
 
 void LedInit(void);
 void Delay_us(volatile uint32_t delay);
+void startHotspot(void);
 void startWaspWard(void);
 void USART3Init(void);
 void USART3_IRQHandler(void);
@@ -38,7 +39,18 @@ char tabWifiBuffor[1024];
 
 int read = 0;	//	0-czyta komunikaty	1-nie czyta komunikatów od wifi
 
-char mt[5] = "XXXXX";
+//rz¹danie GET
+int read_channel = 0;
+int channel = -1;
+char discovery_channel;
+int read_msg_size = 0;
+char tab_msg_size[4];
+int msg_size = -1;
+const SIZE_MSG = 1024;
+int read_msg = 0;
+char tab_msg[1024];
+
+int new_msg = 0;
 
 //test test test
 void printfMagicTable(){
@@ -53,6 +65,11 @@ void printfMagicTable(){
 }
 
 //const DATA
+const char* WARD_HOTSPOT_NAME = "Wasp1";
+const char* WARD_PASSWORD_NAME = "Wasp1abc";
+const int PORT = 80;
+const char* HTML_SITE = "<h1>WORK!!!</h1>\r\n";
+
 const char* NAME= "Wasp1";
 
 const char* NAME_WASPCENTER_AP = "test";
@@ -60,7 +77,9 @@ const char* PASSWORD_WASPCENTER_AP = "admin123";
 const char* IP_WASPCENTER_SERVER = "192.168.43.129";
 const int PORT_WASPCENTER_SERVER = 280;
 
-
+//przesuwna tablica przechowuj¹ca ostatnie znaki odebrane z wifi
+const int SIZE_TABRES = 10;
+char tabRes[10];
 
 int main (void) {
 
@@ -83,9 +102,18 @@ int main (void) {
 	//WIFI INIT
 	USART3Init();
 
-	//tutaj powinna byæ konfiguracja hotspot
-	//i oczekiwanie na podanie danych waspcenter
+	//konfiguracja hotspot
+	startHotspot();
 
+	//i oczekiwanie na podanie danych waspcenter
+	while(1){
+		if(new_msg==1){
+			SendToClient(HTML_SITE,channel);
+			new_msg=0;
+		}
+		Delay_us(1000000);
+		printfMagicTable();
+	}
 	//inicjalizacja wszystkich czujników i pierwszy odczyt ¿eby nie wysy³aæ zer
 
 	startWaspWard();
@@ -138,6 +166,33 @@ void connectWaspCenterNetwork(char* name, char* password)
 
 	USART_Send(buffer);
 	Delay_us(10000000);
+}
+
+void startHotspot(void){
+	read = 1;
+	printf("START RESET ");
+	USART_Send("AT+RST\r\n");				//Enable multiple connections (required)
+	Delay_us(2500000);
+	printf(". \n");
+	read = 0;
+
+	USART_Send("AT+CWMODE=2\r\n");		// Access Point
+	Delay_us(2000000);
+
+	char buffer[512];
+	int n = sprintf(buffer,"AT+CWSAP=\"%s\",\"%s\",4,2\r\n",WARD_HOTSPOT_NAME,WARD_PASSWORD_NAME);
+	USART_Send(buffer);
+	Delay_us(2000000);
+
+	USART_Send("AT+CIPMUX=1\r\n");
+	Delay_us(2000000);
+
+	char buffer2[512];
+	n = sprintf(buffer2,"AT+CIPSERVER=1,%d\r\n",PORT);
+	USART_Send(buffer2);
+	Delay_us(2000000);
+
+	GPIO_SetBits(GPIOD,GPIO_Pin_15);
 }
 
 void startWaspWard(void)
@@ -204,6 +259,7 @@ void USART3_IRQHandler(void)
 
     		if(sign == '\n')	sign = '|';
     		if(sign == '\r')	sign = '\\';
+
     		//test test test
     		int n = strlen(tabWifiBuffor);
 
@@ -213,21 +269,52 @@ void USART3_IRQHandler(void)
 				for(int k=0; k<SIZE_WIFI_BUFFOR; k++){
 					tabWifiBuffor[k]=0;
 				}
+			}//test test test
+
+
+			for(int i=0;i<SIZE_TABRES-1;i++){
+				tabRes[i]=tabRes[i+1];
 			}
 
-			//wykrywanie wiadomosci
-			//tablica mt przechowóje ostatnie 5 znaków
+			tabRes[SIZE_TABRES-1]=sign;
+
 			/*
-			for(int i=0; i<4; i++){
-				mk[i] = mk[i+1];
+			if(read_msg==1 && msg_size==1){
+				int n = strlen(tab_msg);
+				tab_msg[n]=sign;
+				msg_size--;
+				read_msg = 0;
+
+				new_msg = 1;
 			}
-			mk[5] = sign;
-
-			//wykrycie +IPD,
-			if(mk[1]=='+' && mk[1]=='I' && mk[1]=='P' && mk[1]=='D' && mk[1]==','){
-				GPIO_ToggleBits(GPIOD, GPIO_Pin_14);
+			if(read_msg==1 && msg_size>1){
+				int n = strlen(tab_msg);
+				tab_msg[n]=sign;
+				msg_size--;
+			}
+			if(read_msg_size==1 && sign==':'){
+				msg_size = atoi(tab_msg_size);
+				read_msg_size = 0;
+				read_msg = 1;
+			}
+			if(read_msg_size==1 && sign!=':'){
+				int n = strlen(tab_msg_size);
+				tab_msg_size[n]=sign;
 			}*/
-
+			if(read_channel==1 && sign==','){
+				read_channel = 0;
+				read_msg_size = 1;
+				GPIO_ToggleBits(GPIOD,GPIO_Pin_12);
+			}
+			if(read_channel==1) {
+				channel = sign - '0';
+				discovery_channel = sign;
+				GPIO_ToggleBits(GPIOD,GPIO_Pin_13);
+			}
+			if(tabRes[SIZE_TABRES-5]=='+' && tabRes[SIZE_TABRES-4]=='I' && tabRes[SIZE_TABRES-3]=='P' && tabRes[SIZE_TABRES-2]=='D' && tabRes[SIZE_TABRES-1]==','){
+				read_channel = 1;
+				GPIO_ToggleBits(GPIOD,GPIO_Pin_14);
+			}
 
 
     	}
@@ -270,6 +357,24 @@ void CloseConnectonWithWaspCenter(void){
 
 	//test test test
 	GPIO_ResetBits(GPIOD,GPIO_Pin_12);
+	printfMagicTable();
+}
+
+
+void SendToClient(volatile char* message, int channel)
+{
+	int length = strlen(message);
+
+	char buffer[512];
+	int n = sprintf(buffer, "AT+CIPSEND=%d,%d\r\n", channel, length);
+	USART_Send(buffer);
+	Delay_us(2000000);
+
+	USART_Send(message);
+
+	Delay_us(2500000);
+
+	//test test test
 	printfMagicTable();
 }
 
