@@ -58,8 +58,7 @@ void printfMagicTable(){
 	printf("\nWifi:%s",tabWifiBuffor);
 
 	//clear tab
-	int k=0;
-	for(k=0; k<512; k++){
+	for(int k=0; k<512; k++){
 		tabWifiBuffor[k]=0;
 	}
 }
@@ -68,7 +67,12 @@ void printfMagicTable(){
 const char* WARD_HOTSPOT_NAME = "Wasp1";
 const char* WARD_PASSWORD_NAME = "Wasp1abc";
 const int PORT = 80;
-const char* HTML_SITE = "<h1>WORK!!!</h1>\r\n";
+
+//test version
+const char* HTML_SITE = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><script type=\"text/javascript\">function createLinkWithData(){var str=\"Dane zapisane. Kliknij, by wyslac dane do urzadzenia...\";var secret_password=document.getElementById(\"secret_password\").value;var ward_name=document.getElementById(\"ward_name\").value;var wifi_name = document.getElementById(\"wifi_name\").value;var wifi_password = document.getElementById(\"wifi_password\").value;var server_ip = document.getElementById(\"server_ip\").value;var server_port=document.getElementById(\"server_port\").value;var str2 = \"DATA\";var hash = \"_\";var text = str2.concat(hash,secret_password,hash,ward_name,hash,wifi_name,hash,wifi_password,hash,server_ip,hash,server_port,hash);var result = str.link(text);document.getElementById(\"link\").innerHTML = result; }</script><style type=\"text/css\" ref=\"stylesheet\">#logo{width: 350px;margin-left: auto;margin-right: auto;border-style: outset;border-radius: 50%;}body{background: #eae9c8;font-family:\"Trebuchet MS\",Helvetica,sans-serif;text-align:center;}</style></head><body><div id=\"logo\"><h1>WaspHouse Ward</h1></div><h4>Skonfiguruj ustawienia urzadzenia WaspWard</h4><br/><span>Sekretne haslo:</span></br><input type=\"password\" id=\"secret_password\" value=\"tajnehaslo\" maxlength=\"15\"/></br></br><span>Nazwa urzadzenia:</span></br><input type=\"text\" id=\"ward_name\" value=\"ward1\" maxlength=\"15\"/></br></br></br><b>Dane urzadzenia Center</b><br/></br><span>Identyfikator sieci:</span></br><input type=\"text\" id=\"wifi_name\" value=\"test\" maxlength=\"15\"/></br></br><span>Haslo sieci:</span></br><input type=\"password\" id=\"wifi_password\" value=\"admin123\" maxlength=\"15\"/></br></br><span>IP serwera:</span></br><input type=\"text\" id=\"server_ip\" value=\"192.168.43.129\" maxlength=\"15\"/></br></br><span>Port serwera:</span></br><input type=\"text\" id=\"server_port\" value=\"280\" maxlength=\"15\"/></br></br></br><button type=\"submit\" onclick=\"createLinkWithData()\"/>Zapisz</button></br></br><span id=\"link\" style=\"text-decoration: none;\"></span></body></html>\r\n";
+
+const char* HTML_SITE2 = "<!DOCTYPE html><html><head><meta charset=\"utf-8\"/><style type=\"text/css\" ref=\"stylesheet\">#logo{width: 350px;margin-left: auto;margin-right: auto;border-style: outset;border-radius: 50%;}body{background: #eae9c8;font-family:\"Trebuchet MS\",Helvetica,sans-serif;text-align:center;}</style></head><body><div id=\"logo\"><h1>WaspHouse Ward</h1></div><h4>Ustawienia urzadzenia WaspWard zostana za chwile zmienione.<br/>Urzadzenie zostanie zrestartowane i podlaczy sie z siecia WaspHouse Center.</h4><br/><h2>Dziekujemy za poswiecony czas :)<h2></body></html>\r\n";
+
 
 const char* NAME= "Wasp1";
 
@@ -76,6 +80,17 @@ const char* NAME_WASPCENTER_AP = "test";
 const char* PASSWORD_WASPCENTER_AP = "admin123";
 const char* IP_WASPCENTER_SERVER = "192.168.43.129";
 const int PORT_WASPCENTER_SERVER = 280;
+
+//
+int typeRequest(char* text);
+const char* REQUESET1_GET = "GET / HTTP/1.1";
+const char* REQUESET2_DATA = "GET /DATA_";
+
+int readDataToRequest(char* request);
+
+int correctSecretePassword(char* pass);
+const char SECRETE_PASSWORD[15] = "tajnehaslo";
+
 
 //przesuwna tablica przechowuj¹ca ostatnie znaki odebrane z wifi
 const int SIZE_TABRES = 10;
@@ -106,24 +121,107 @@ int main (void) {
 	startHotspot();
 
 	//i oczekiwanie na podanie danych waspcenter
-	while(1){
+	char secret_passwordX[15];
+	char ward_nameX[15];
+	char wifi_name[15];
+	char wifi_password[15];
+	char server_ip[15];
+	int server_port;
+
+	int endHot = 1;
+	do{
 		if(new_msg==1){
-			SendToClient(HTML_SITE,channel);
 			new_msg=0;
+			int t = typeRequest(tab_msg);
+
+			if(t == 1){
+				SendToClient(HTML_SITE,channel);
+			}
+			else if(t == 2){
+
+				int n = 0;
+				int i = 0;
+				while(request[n] != '_')	n++;
+				n++;
+
+				i=0;
+				while(request[n] != '_'){
+					secret_passwordX[i] = request[n];
+					n++;
+					i++;
+				}
+				n++;
+				i=0;
+				while(request[n] != '_'){
+					ward_nameX[i] = request[n];
+					n++;
+					i++;
+				}
+				n++;
+				i=0;
+				while(request[n] != '_'){
+					wifi_name[i] = request[n];
+					n++;
+					i++;
+				}
+				n++;
+				i=0;
+				while(request[n] != '_'){
+					wifi_password[i] = request[n];
+					n++;
+					i++;
+				}
+				n++;
+				i=0;
+				while(request[n] != '_'){
+					server_ip[i] = request[n];
+					n++;
+					i++;
+				}
+				n++;
+				i=0;
+				char number_port[3];
+				while(request[n] != '_'){
+					number_port[i] = request[n];
+					n++;
+					i++;
+				}
+
+				server_port = atoi(number_port);
+
+				int n = strlen(SECRETE_PASSWORD);
+				endHot = 0;
+				for(int i=0; i<n; i++){
+					if(secret_passwordX[i]!=SECRETE_PASSWORD[i]){
+						endHot=1;
+					}
+				}
+				if(endHot==0){
+					SendToClient(HTML_SITE2,channel);
+				}
+
+			}
+
+			//clear tab msg
+			for(int i=0; i<SIZE_MSG; i++) tab_msg[i] = 0;
+			printfMagicTable();
 		}
 		Delay_us(1000000);
-		printfMagicTable();
-	}
+	}while(endHot);
+
 	//inicjalizacja wszystkich czujników i pierwszy odczyt ¿eby nie wysy³aæ zer
 
 	startWaspWard();
 
-	connectWaspCenterNetwork(NAME_WASPCENTER_AP, PASSWORD_WASPCENTER_AP);
+	connectWaspCenterNetwork(wifi_name, wifi_password);
+	//connectWaspCenterNetwork(NAME_WASPCENTER_AP, PASSWORD_WASPCENTER_AP);
 
-	StartConnectonWithWaspCenter(IP_WASPCENTER_SERVER, PORT_WASPCENTER_SERVER);
+	StartConnectonWithWaspCenter(server_ip, server_port);
+	//StartConnectonWithWaspCenter(IP_WASPCENTER_SERVER, PORT_WASPCENTER_SERVER);
 
 	char buffer[512];
-	int n = sprintf(buffer,"%s\r\n",NAME);
+	int n = sprintf(buffer,"%s\r\n",ward_nameX);
+	//int n = sprintf(buffer,"%s\r\n",NAME);
 	SendToWaspCenter(buffer);
 
 	for(int i=0; i<3; i++){
@@ -171,7 +269,7 @@ void connectWaspCenterNetwork(char* name, char* password)
 void startHotspot(void){
 	read = 1;
 	printf("START RESET ");
-	USART_Send("AT+RST\r\n");				//Enable multiple connections (required)
+	USART_Send("AT+RST\r\n");
 	Delay_us(2500000);
 	printf(". \n");
 	read = 0;
@@ -197,6 +295,13 @@ void startHotspot(void){
 
 void startWaspWard(void)
 {
+	read = 1;
+	printf("START RESET ");
+	USART_Send("AT+RST\r\n");
+	Delay_us(2500000);
+	printf(". \n");
+	read = 0;
+
 	USART_Send("AT+CWMODE=1\r\n");
 	Delay_us(2000000);
 	USART_Send("AT+CIPMUX=0\r\n");
@@ -265,10 +370,6 @@ void USART3_IRQHandler(void)
 
 			if(n < SIZE_WIFI_BUFFOR){
 				tabWifiBuffor[n] = sign;
-			}else{
-				for(int k=0; k<SIZE_WIFI_BUFFOR; k++){
-					tabWifiBuffor[k]=0;
-				}
 			}//test test test
 
 
@@ -278,13 +379,12 @@ void USART3_IRQHandler(void)
 
 			tabRes[SIZE_TABRES-1]=sign;
 
-			/*
 			if(read_msg==1 && msg_size==1){
 				int n = strlen(tab_msg);
 				tab_msg[n]=sign;
 				msg_size--;
 				read_msg = 0;
-
+				GPIO_ToggleBits(GPIOD,GPIO_Pin_12);
 				new_msg = 1;
 			}
 			if(read_msg==1 && msg_size>1){
@@ -296,20 +396,23 @@ void USART3_IRQHandler(void)
 				msg_size = atoi(tab_msg_size);
 				read_msg_size = 0;
 				read_msg = 1;
+				//clear tab msg size
+				for(int i=0; i<4; i++) tab_msg_size[i]=0;
 			}
 			if(read_msg_size==1 && sign!=':'){
 				int n = strlen(tab_msg_size);
 				tab_msg_size[n]=sign;
-			}*/
+				GPIO_ToggleBits(GPIOD,GPIO_Pin_13);
+			}
 			if(read_channel==1 && sign==','){
 				read_channel = 0;
 				read_msg_size = 1;
-				GPIO_ToggleBits(GPIOD,GPIO_Pin_12);
+
 			}
 			if(read_channel==1) {
 				channel = sign - '0';
 				discovery_channel = sign;
-				GPIO_ToggleBits(GPIOD,GPIO_Pin_13);
+
 			}
 			if(tabRes[SIZE_TABRES-5]=='+' && tabRes[SIZE_TABRES-4]=='I' && tabRes[SIZE_TABRES-3]=='P' && tabRes[SIZE_TABRES-2]=='D' && tabRes[SIZE_TABRES-1]==','){
 				read_channel = 1;
@@ -412,3 +515,82 @@ void getTemparatureAndHumidity(int *temp, int *humi)
 		*humi = 0;
 	}
 }
+
+int typeRequest(char* text){
+	int lenght_request,n;
+
+	//GET / HTTP/1.1
+	n = 0;
+	lenght_request = strlen(REQUESET1_GET);
+	for(int i=0; i<lenght_request; i++){
+		if(text[i] == REQUESET1_GET[i])	n++;
+	}
+
+	if(n == lenght_request)	return 1;
+
+	//GET /DATA_
+	n = 0;
+	lenght_request = strlen(REQUESET2_DATA);
+	for(int i=0; i<lenght_request; i++){
+		if(text[i] == REQUESET2_DATA[i]) n++;
+	}
+
+	if(n == lenght_request)	return 2;
+
+	return 0;
+}
+
+/*
+int readDataToRequest(char* request){
+	int n = 0;
+	int i = 0;
+	while(request[n] != '_')	n++;
+	n++;
+
+	i=0;
+	while(request[n] != '_'){
+		secret_passwordX[i] = request[n];
+		n++;
+		i++;
+	}
+	n++;
+	i=0;
+	while(request[n] != '_'){
+		ward_nameX[i] = request[n];
+		n++;
+		i++;
+	}
+	n++;
+	i=0;
+	while(request[n] != '_'){
+		wifi_name[i] = request[n];
+		n++;
+		i++;
+	}
+	n++;
+	i=0;
+	while(request[n] != '_'){
+		wifi_password[i] = request[n];
+		n++;
+		i++;
+	}
+	n++;
+	i=0;
+	while(request[n] != '_'){
+		server_ip[i] = request[n];
+		n++;
+		i++;
+	}
+	n++;
+	i=0;
+	char number_port[3];
+	while(request[n] != '_'){
+		number_port[i] = request[n];
+		n++;
+		i++;
+	}
+
+	server_port = atoi(number_port);
+
+	return 1;
+}*/
