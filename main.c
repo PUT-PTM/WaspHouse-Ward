@@ -37,9 +37,9 @@ void SendToWaspCenter(volatile char* message);
 const int SIZE_WIFI_BUFFOR = 1024;
 char tabWifiBuffor[1024];
 
-int read = 0;	//	0-czyta komunikaty	1-nie czyta komunikatów od wifi
+int read = 0;	//	0-czyta komunikaty	1-nie czyta komunikatÃ³w od wifi
 
-//rz¹danie GET
+//rzÂ¹danie GET
 int read_channel = 0;
 int channel = -1;
 char discovery_channel;
@@ -55,8 +55,9 @@ int new_msg = 0;
 //test test test
 void printfMagicTable(){
 
-	printf("\nWifi:%s",tabWifiBuffor);
-
+	int len = strlen(tabWifiBuffor);
+	printf("\nWifi(%d):%s",len,tabWifiBuffor);
+	Delay_us(10000);
 	//clear tab
 	for(int k=0; k<512; k++){
 		tabWifiBuffor[k]=0;
@@ -92,9 +93,16 @@ int correctSecretePassword(char* pass);
 const char SECRETE_PASSWORD[15] = "tajnehaslo";
 
 
-//przesuwna tablica przechowuj¹ca ostatnie znaki odebrane z wifi
+//przesuwna tablica przechowujÄ…ca ostatnie znaki odebrane z wifi
 const int SIZE_TABRES = 10;
 char tabRes[10];
+
+char secret_passwordX[15];
+char ward_nameX[15];
+char wifi_name[15];
+char wifi_password[15];
+char server_ip[15];
+int server_port;
 
 int main (void) {
 
@@ -121,12 +129,7 @@ int main (void) {
 	startHotspot();
 
 	//i oczekiwanie na podanie danych waspcenter
-	char secret_passwordX[15];
-	char ward_nameX[15];
-	char wifi_name[15];
-	char wifi_password[15];
-	char server_ip[15];
-	int server_port;
+
 
 	int endHot = 1;
 	do{
@@ -139,55 +142,7 @@ int main (void) {
 			}
 			else if(t == 2){
 
-				int n = 0;
-				int i = 0;
-				while(request[n] != '_')	n++;
-				n++;
-
-				i=0;
-				while(request[n] != '_'){
-					secret_passwordX[i] = request[n];
-					n++;
-					i++;
-				}
-				n++;
-				i=0;
-				while(request[n] != '_'){
-					ward_nameX[i] = request[n];
-					n++;
-					i++;
-				}
-				n++;
-				i=0;
-				while(request[n] != '_'){
-					wifi_name[i] = request[n];
-					n++;
-					i++;
-				}
-				n++;
-				i=0;
-				while(request[n] != '_'){
-					wifi_password[i] = request[n];
-					n++;
-					i++;
-				}
-				n++;
-				i=0;
-				while(request[n] != '_'){
-					server_ip[i] = request[n];
-					n++;
-					i++;
-				}
-				n++;
-				i=0;
-				char number_port[3];
-				while(request[n] != '_'){
-					number_port[i] = request[n];
-					n++;
-					i++;
-				}
-
-				server_port = atoi(number_port);
+				int x = readDataToRequest(tab_msg);
 
 				int n = strlen(SECRETE_PASSWORD);
 				endHot = 0;
@@ -209,7 +164,7 @@ int main (void) {
 		Delay_us(1000000);
 	}while(endHot);
 
-	//inicjalizacja wszystkich czujników i pierwszy odczyt ¿eby nie wysy³aæ zer
+	//inicjalizacja wszystkich czujnikÃ³w i pierwszy odczyt Â¿eby nie wysyÂ³aÃ¦ zer
 
 	startWaspWard();
 
@@ -540,13 +495,12 @@ int typeRequest(char* text){
 	return 0;
 }
 
-/*
+
 int readDataToRequest(char* request){
 	int n = 0;
 	int i = 0;
 	while(request[n] != '_')	n++;
 	n++;
-
 	i=0;
 	while(request[n] != '_'){
 		secret_passwordX[i] = request[n];
@@ -589,8 +543,6 @@ int readDataToRequest(char* request){
 		n++;
 		i++;
 	}
-
 	server_port = atoi(number_port);
-
 	return 1;
-}*/
+}
