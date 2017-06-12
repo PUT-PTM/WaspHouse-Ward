@@ -2,6 +2,7 @@
 
 ## Overview 
 Distributed IoT system - Wasp.
+![19142231_1280419338741212_706988342_n 1](https://user-images.githubusercontent.com/13883700/27058331-d70e2140-4fd0-11e7-8553-0cac0a095475.png)
 
 ## Description
 Distributed IoT system that allows meansurment and processing data from sensors like temperature, humidity, light intensity on the photocurrent and distance from the distance sensor.
